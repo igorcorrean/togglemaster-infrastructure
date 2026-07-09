@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analytics-service-config
+  namespace: togglemaster
+data:
+  SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/271384503138/MyQueue"
+  DYNAMODB_TABLE_NAME: "ToggleMasterTable"
+  AWS_REGION: "us-east-1"

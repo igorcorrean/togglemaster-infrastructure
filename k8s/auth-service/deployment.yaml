@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: togglemaster
+  labels:
+    app: auth-service
+spec:
+  replicas: 2 # Começa com 2 réplicas para garantir alta disponibilidade
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        # Substitua pela URL completa da imagem que você buildou e enviou para o ECR
+        image: "271384503138.dkr.ecr.us-east-1.amazonaws.com/togglemaster/auth-service:latest"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        
+        # Injeção das variáveis de ambiente usando o ConfigMap e o Secret acima
+        env:
+        - name: DB_HOST_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: auth-service-config
+              key: DB_HOST_AUTH
+        - name: DB_PORT_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: auth-service-config
+              key: DB_PORT_AUTH
+        - name: DB_NAME_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: auth-service-config
+              key: DB_NAME_AUTH
+        - name: PORT_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: auth-service-config
+              key: PORT_AUTH
+        - name: DB_USER_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: auth-service-secret
+              key: DB_USER_AUTH
+        - name: DB_PASSWORD_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: auth-service-secret
+              key: DB_PASSWORD_AUTH
+
+        # Definição de recursos exigidos pelas boas práticas (Evita travar o Node EC2)
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "300m"
+            memory: "256Mi"
+
+        # Valida se a aplicação subiu com sucesso antes de liberar tráfego
+        readinessProbe:
+          httpGet:
+            path: /health # Se a aplicação em Go tiver outro path de saúde, altere aqui
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        # Monitora se a aplicação não travou (se travar, o Kubernetes reinicia o Pod)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 20
