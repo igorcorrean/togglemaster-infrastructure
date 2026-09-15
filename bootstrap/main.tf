@@ -21,7 +21,7 @@ variable "aws_region" {
 variable "bucket_name" {
   description = "Nome globalmente único do bucket S3 usado como backend remoto do Terraform"
   type        = string
-  default     = "togglemaster-terraform-state"
+  default     = "togglemaster-tfstate-271384503138"
 }
 
 resource "aws_s3_bucket" "tf_state" {
