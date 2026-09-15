@@ -1,0 +1,43 @@
+name: "Terraform - Destroy"
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Digite exatamente "DESTROY" para autorizar a destruição:'
+        required: true
+        default: 'CANCEL'
+
+jobs:
+  destroy:
+    name: "Terraform Destroy"
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirmation == 'DESTROY'
+
+    env:
+      AWS_REGION: "us-east-1"
+      TF_VAR_rds_password: ${{ secrets.RDS_PASSWORD }}
+      TF_VAR_existing_iam_role_arn: ${{ secrets.EXISTING_IAM_ROLE_ARN }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Necessário se usar AWS Academy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve

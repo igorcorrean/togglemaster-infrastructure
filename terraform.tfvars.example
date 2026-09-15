@@ -1,0 +1,13 @@
+# Copie este arquivo para terraform.tfvars e ajuste os valores.
+# NUNCA commite terraform.tfvars com segredos reais (já está no .gitignore).
+
+aws_region   = "us-east-1"
+project_name = "togglemaster"
+environment  = "dev"
+
+rds_username = "toggleadmin"
+rds_password = "CHANGE-ME-STRONG-PASSWORD"
+
+# Deixe null em conta pessoal. No AWS Academy, informe o ARN da LabRole, ex:
+# existing_iam_role_arn = "arn:aws:iam::123456789012:role/LabRole"
+existing_iam_role_arn = null
