@@ -9,7 +9,7 @@
 
 terraform {
   backend "s3" {
-    bucket       = "togglemaster-terraform-state-271384503138" # ajuste para o nome real do seu bucket (globalmente único)
+    bucket       = "togglemaster-tfstate-271384503138" # ajuste para o nome real do seu bucket (globalmente único)
     key          = "phase3/toggle-master/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
