@@ -111,7 +111,8 @@ resource "aws_eks_node_group" "this" {
   ami_type        = "AL2023_x86_64_STANDARD"
   instance_types  = var.node_instance_types
   capacity_type   = "ON_DEMAND"
-
+  version = "1.34"
+  
   scaling_config {
     desired_size = var.node_desired_size
     min_size     = var.node_min_size
