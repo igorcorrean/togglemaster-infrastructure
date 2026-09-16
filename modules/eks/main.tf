@@ -87,7 +87,7 @@ resource "aws_security_group" "cluster" {
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   role_arn = local.cluster_role_arn
-  version  = "1.34"
+  version  = "1.33"
 
   vpc_config {
     subnet_ids              = concat(var.private_subnet_ids, var.public_subnet_ids)
