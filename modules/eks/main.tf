@@ -112,7 +112,7 @@ resource "aws_eks_node_group" "this" {
   ami_type = "AL2023_x86_64_STANDARD"
 
   # 2. Pool diversificado em instâncias burstable ARM
-  instance_types = ["t3.medium","t3.small"]
+  instance_types = ["t3.medium"]
 
   # 3. Economia de até 90% com instâncias Spot
   capacity_type = "SPOT"
@@ -123,9 +123,9 @@ resource "aws_eks_node_group" "this" {
 
   # 5. Escala enxuta: 1 nó para rodar pods essenciais (CoreDNS/kube-proxy/workloads)
   scaling_config {
-    desired_size = 1
+    desired_size = 2
     min_size     = 1
-    max_size     = 2
+    max_size     = 3
   }
 
   update_config {
