@@ -1,7 +1,4 @@
 # ---------- IAM: Cluster role ----------
-# Se existing_iam_role_arn for informado (cenário AWS Academy/LabRole), reaproveita essa role
-# e não cria nenhuma role/policy nova. Em conta pessoal, cria roles dedicadas.
-
 data "aws_iam_role" "existing" {
   count = var.existing_iam_role_arn != null ? 1 : 0
   name  = element(split("/", var.existing_iam_role_arn), length(split("/", var.existing_iam_role_arn)) - 1)
@@ -28,7 +25,6 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
 }
 
 # ---------- IAM: Node role ----------
-
 resource "aws_iam_role" "node" {
   count = var.existing_iam_role_arn == null ? 1 : 0
   name  = "${var.cluster_name}-node-role"
@@ -67,7 +63,6 @@ locals {
 }
 
 # ---------- EKS Cluster ----------
-
 resource "aws_security_group" "cluster" {
   name_prefix = "${var.cluster_name}-cluster-sg-"
   vpc_id      = var.vpc_id
@@ -96,27 +91,41 @@ resource "aws_eks_cluster" "this" {
     endpoint_private_access = true
   }
 
+  # Mantido desabilitado para economizar custos de ingestão no CloudWatch Logs
+  enabled_cluster_log_types = []
+
   depends_on = [
     aws_iam_role_policy_attachment.cluster_policy,
   ]
 }
 
-# ---------- Managed Node Group ----------
-
+# ---------- Managed Node Group (Otimizado para Custo Mínimo) ----------
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.cluster_name}-ng"
   node_role_arn   = local.node_role_arn
-  subnet_ids      = var.private_subnet_ids
-  ami_type        = "AL2023_x86_64_STANDARD"
-  instance_types  = var.node_instance_types
-  capacity_type   = "ON_DEMAND"
-  version = "1.34"
 
+  # DICA DE ECONOMIA MÁXIMA: se você não usa NAT Gateway, aponte para subnets públicas:
+  # subnet_ids = var.public_subnet_ids
+  subnet_ids = var.private_subnet_ids
+
+  ami_type = "AL2023_x86_64_STANDARD"
+
+  # 2. Pool diversificado em instâncias burstable ARM
+  instance_types = ["t3.small"]
+
+  # 3. Economia de até 90% com instâncias Spot
+  capacity_type = "SPOT"
+  version       = "1.34"
+
+  # 4. Limitação do tamanho de disco para evitar cobrança desnecessária de gp3
+  disk_size = 20
+
+  # 5. Escala enxuta: 1 nó para rodar pods essenciais (CoreDNS/kube-proxy/workloads)
   scaling_config {
-    desired_size = var.node_desired_size
-    min_size     = var.node_min_size
-    max_size     = var.node_max_size
+    desired_size = 1
+    min_size     = 1
+    max_size     = 2
   }
 
   update_config {
@@ -131,10 +140,6 @@ resource "aws_eks_node_group" "this" {
 }
 
 # ---------- OIDC Provider (IRSA) ----------
-# Só faz sentido em conta pessoal (Opção B), pois requer criar um recurso de IAM.
-# Usado por controllers como o Nginx Ingress Controller e o KEDA para obter
-# permissões via Service Account sem herdar a role inteira do nó.
-
 resource "aws_iam_openid_connect_provider" "this" {
   count           = var.existing_iam_role_arn == null ? 1 : 0
   url             = aws_eks_cluster.this.identity[0].oidc[0].issuer
