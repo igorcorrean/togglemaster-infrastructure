@@ -17,7 +17,6 @@ jobs:
     env:
       AWS_REGION: "us-east-1"
       TF_VAR_rds_password: ${{ secrets.RDS_PASSWORD }}
-      TF_VAR_existing_iam_role_arn: ${{ secrets.EXISTING_IAM_ROLE_ARN }}
 
     steps:
       - name: Checkout Repository
@@ -28,7 +27,6 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Necessário se usar AWS Academy
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
