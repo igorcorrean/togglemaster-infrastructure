@@ -11,7 +11,13 @@ output "cluster_certificate_authority_data" {
 }
 
 output "cluster_security_group_id" {
-  value = aws_security_group.cluster.id
+  description = "Security Group principal do cluster EKS compartilhado com os worker nodes"
+  value       = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+}
+
+output "control_plane_security_group_id" {
+  description = "Security Group adicional da control plane"
+  value       = aws_security_group.cluster.id
 }
 
 output "oidc_provider_arn" {
